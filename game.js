@@ -9,6 +9,35 @@ function Player(name, marker, isHuman) {
     player.isHuman = isHuman || false;
     player.score = 0;
 
+    player.chooseField = () => {
+        let freeFields = Game.board.fields.filter((field) => (field != player1.marker) && (field != player2.marker));
+        let targetField;
+        
+        if (player.isHuman) {
+            do {
+                // prompt human player to choose target field
+                targetField = parseInt(prompt("Please enter the number of the field in which to draw your mark (1-9).", ""));
+            }
+            while (!freeFields.includes(targetField));
+        } else {
+            do {
+                // if not a human player, choose field randomly
+                targetField = Math.floor((Math.random() * 8));
+            }
+            while (!freeFields.includes(targetField));
+        }
+    };
+
+    player.drawMark = (field) => {
+        if ((Game.board.fields[field] != player1.marker) && (Game.board.fields[field] != player2.marker)) {
+            Game.board.fields[field] = player.marker;
+        }
+    };
+
+    player.makeMove = () => {
+        player.drawMark(player.chooseField);
+    };
+
     return player;
 };
 
@@ -80,6 +109,17 @@ const Game = (function() {
                     console.warn("GUI drawing mode not implemented yet");
                     board.Display.setMode("toConsole");
                     board.Display.draw();
+                    break;
+            }
+        };
+
+        board.Display.showWinner = () => {
+            switch (board.Display.mode) {
+                case "CONSOLE":
+                    console.log(`${winner} wins!`);
+                    break;
+                case "GUI":
+                    alert(`${winner} wins!`);
                     break;
             }
         };
@@ -186,9 +226,18 @@ const Game = (function() {
         // ++++++++++++++++ GAME CONTROL FLOW LOGIC ++++++++++++++++
 
         const play = () => {
+
             // contains the game loop
+            while (!Game.isOver) {
+                Game.players.forEach((player) => player.makeMove());
+            };
 
+            if (Game.winner != null) {
+                Game.Display.showWinner();
+                Game.winner.score++;
+                Game.winner = null;
 
+            }
             //     while nobody has won && there are still empty fields left:
             //         playRound {
             //             players.forEach(player => player.makeMove),
@@ -202,14 +251,59 @@ const Game = (function() {
         };
 
         const isOver = () => {
-            // logic to check if game is over, returns a boolean
+            // if game has a winner or ends in a tie (=the game is over), returns true 
+            if (Game.winner != null) return true;
+            if (Game.isTie) return true;
 
             // in case the game is not over:
             return false;
         };
 
+        const isTie = () => {
 
-    return { board, players, isMultiplayer, setMultiplayer, setup, init, reset, play, isOver };
+            let outcome = false; //default 
+
+            // return true if no blank fields left + no winner
+            for (let i = 0; i < Game.board.fields.length; i++) {
+                if ((Game.board.fields[i] != player1.marker) && (Game.board.fields[i] != player2.marker) && (Game.winner === null)) {
+                    outcome = true;
+                }
+            }
+
+            // else, return false (default)
+            return outcome;
+        };
+
+        const winner = () => {
+            let winner = null; //default 
+
+            // 0 1 2
+            // 3 4 5
+            // 6 7 8
+
+            // 3 horizontal matches
+            if ((Game.board.fields[0] === Game.board.fields[1]) && (Game.board.fields[0] === Game.board.fields[2])) return getWinner(Game.board.fields[0]);
+            if ((Game.board.fields[3] === Game.board.fields[4]) && (Game.board.fields[3] === Game.board.fields[5])) return getWinner(Game.board.fields[3]);
+            if ((Game.board.fields[6] === Game.board.fields[7]) && (Game.board.fields[6] === Game.board.fields[8])) return getWinner(Game.board.fields[6]);
+
+            // 3 vertical matches
+            if ((Game.board.fields[0] === Game.board.fields[3]) && (Game.board.fields[0] === Game.board.fields[6])) return getWinner(Game.board.fields[0]);
+            if ((Game.board.fields[1] === Game.board.fields[4]) && (Game.board.fields[1] === Game.board.fields[7])) return getWinner(Game.board.fields[1]);
+            if ((Game.board.fields[2] === Game.board.fields[5]) && (Game.board.fields[2] === Game.board.fields[8])) return getWinner(Game.board.fields[2]);
+
+            // 2 diagonal matches
+            if ((Game.board.fields[0] === Game.board.fields[4]) && (Game.board.fields[0] === Game.board.fields[8])) return getWinner(Game.board.fields[0]);
+            if ((Game.board.fields[2] === Game.board.fields[4]) && (Game.board.fields[2] === Game.board.fields[6])) return getWinner(Game.board.fields[2]);
+
+            return winner;
+        };
+
+        const getWinner = (markerInField) => {
+            let winner = Game.players.filter((player) => player.marker === markerInField);
+            return winner;
+        };
+
+    return { board, players, isMultiplayer, setMultiplayer, setup, init, reset, play, isOver, isTie, winner, getWinner };
 
 }());
 
