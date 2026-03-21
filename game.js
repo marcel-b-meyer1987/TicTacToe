@@ -31,8 +31,10 @@ function Player(name, marker, isHuman) {
     };
 
     player.drawMark = (field) => {
-        if ((Game.board.fields[field] != Game.players[0].marker) && (Game.board.fields[field] != Game.players[1].marker)) {
-            Game.board.fields[field] = player.marker;
+        let index = field-1;
+        if ((Game.board.fields[index] != Game.players[0].marker) && (Game.board.fields[index] != Game.players[1].marker)) {
+            Game.board.fields[index] = player.marker;
+            Game.board.Display.draw();
         }
     };
 
@@ -101,6 +103,7 @@ const Game = (function() {
             switch(board.Display.mode) {
                 case "CONSOLE":
                     // draw field display in console
+                    console.clear();
                     const consoleOutput = board.Display.renderForConsole();
                     for (let i = 0; i < consoleOutput.length; i++) {
                         console.log(consoleOutput[i] || " ");
@@ -234,9 +237,10 @@ const Game = (function() {
 
             //reset game board
             Game.board.reset();
+            Game.board.Display.draw();
 
             //start gameloop = Game.play();
-            Game.play();
+            // Game.play();
         };       
 
         const reset = () => {
