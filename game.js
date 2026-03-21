@@ -10,7 +10,7 @@ function Player(name, marker, isHuman) {
     player.score = 0;
 
     player.chooseField = () => {
-        let freeFields = Game.board.fields.filter((field) => (field != player1.marker) && (field != player2.marker));
+        let freeFields = Game.board.getFreeFields();
         let targetField;
         
         if (player.isHuman) {
@@ -26,16 +26,18 @@ function Player(name, marker, isHuman) {
             }
             while (!freeFields.includes(targetField));
         }
+
+        return targetField;
     };
 
     player.drawMark = (field) => {
-        if ((Game.board.fields[field] != player1.marker) && (Game.board.fields[field] != player2.marker)) {
+        if ((Game.board.fields[field] != Game.players[0].marker) && (Game.board.fields[field] != Game.players[1].marker)) {
             Game.board.fields[field] = player.marker;
         }
     };
 
     player.makeMove = () => {
-        player.drawMark(player.chooseField);
+        player.drawMark(player.chooseField());
     };
 
     return player;
@@ -101,7 +103,7 @@ const Game = (function() {
                     // draw field display in console
                     const consoleOutput = board.Display.renderForConsole();
                     for (let i = 0; i < consoleOutput.length; i++) {
-                        console.log(consoleOutput[i]);
+                        console.log(consoleOutput[i] || " ");
                     }
                     break;
 
@@ -123,6 +125,23 @@ const Game = (function() {
                     break;
             }
         };
+
+        board.getFreeFields = () => {       // TESTED OK
+            let freeFields = [];
+            switch(board.Display.spacer) {
+                case "numbers":
+                    board.fields.forEach((value, index) => { 
+                        if(!isNaN(value)) freeFields.push(index);
+                    });
+                    break;
+                case "blanks":
+                    board.fields.forEach((value, index) => { 
+                        if((value === " ") || (value === NaN)) freeFields.push(index);
+                    });
+                    break;
+            }
+            return freeFields;
+        }
 
         board.reset = () => {
             switch (board.Display.spacer) {
@@ -149,6 +168,7 @@ const Game = (function() {
         board.setFieldsToDemo = () => {
             // FOR DEMO AND DEBUG USE ONLY
 
+            board.reset();
             board.fields[0] = "X";
             board.fields[4] = "O";
             board.fields[5] = "X";
@@ -208,7 +228,9 @@ const Game = (function() {
             let player1 = new Player("Player 1", "X", true);
             let player2 = new Player("Player 2", "O", this.isMultiplayer);
 
-            Game.players.push([player1, player2]);
+            Game.players = [player1, player2];
+            Game.winner = null;
+
 
             //reset game board
             Game.board.reset();
@@ -228,7 +250,8 @@ const Game = (function() {
         const play = () => {
 
             // contains the game loop
-            while (!Game.isOver) {
+            //while (!Game.isOver()) { --- commented out for testing with hard coded infinite loop
+            while (true) {
                 Game.players.forEach((player) => player.makeMove());
             };
 
@@ -238,22 +261,13 @@ const Game = (function() {
                 Game.winner = null;
 
             }
-            //     while nobody has won && there are still empty fields left:
-            //         playRound {
-            //             players.forEach(player => player.makeMove),
-            //             if emptyFieldsLeft continue,
-            //             else: isOver + display Draw!
-            //         }
-            //         if (3-in-a-row) => isOver + display winner, 
-            //         ask if players want new game? If yes, reset!
-            // }
 
         };
 
         const isOver = () => {
             // if game has a winner or ends in a tie (=the game is over), returns true 
             if (Game.winner != null) return true;
-            if (Game.isTie) return true;
+            if (Game.isTie() === true) return true;
 
             // in case the game is not over:
             return false;
@@ -282,18 +296,18 @@ const Game = (function() {
             // 6 7 8
 
             // 3 horizontal matches
-            if ((Game.board.fields[0] === Game.board.fields[1]) && (Game.board.fields[0] === Game.board.fields[2])) return getWinner(Game.board.fields[0]);
-            if ((Game.board.fields[3] === Game.board.fields[4]) && (Game.board.fields[3] === Game.board.fields[5])) return getWinner(Game.board.fields[3]);
-            if ((Game.board.fields[6] === Game.board.fields[7]) && (Game.board.fields[6] === Game.board.fields[8])) return getWinner(Game.board.fields[6]);
+            if ((Game.board.fields[0] != " ") && (Game.board.fields[0] === Game.board.fields[1]) && (Game.board.fields[0] === Game.board.fields[2])) return getWinner(Game.board.fields[0]);
+            if ((Game.board.fields[3] != " ") && (Game.board.fields[3] === Game.board.fields[4]) && (Game.board.fields[3] === Game.board.fields[5])) return getWinner(Game.board.fields[3]);
+            if ((Game.board.fields[6] != " ") && (Game.board.fields[6] === Game.board.fields[7]) && (Game.board.fields[6] === Game.board.fields[8])) return getWinner(Game.board.fields[6]);
 
             // 3 vertical matches
-            if ((Game.board.fields[0] === Game.board.fields[3]) && (Game.board.fields[0] === Game.board.fields[6])) return getWinner(Game.board.fields[0]);
-            if ((Game.board.fields[1] === Game.board.fields[4]) && (Game.board.fields[1] === Game.board.fields[7])) return getWinner(Game.board.fields[1]);
-            if ((Game.board.fields[2] === Game.board.fields[5]) && (Game.board.fields[2] === Game.board.fields[8])) return getWinner(Game.board.fields[2]);
+            if ((Game.board.fields[0] != " ") && (Game.board.fields[0] === Game.board.fields[3]) && (Game.board.fields[0] === Game.board.fields[6])) return getWinner(Game.board.fields[0]);
+            if ((Game.board.fields[1] != " ") && (Game.board.fields[1] === Game.board.fields[4]) && (Game.board.fields[1] === Game.board.fields[7])) return getWinner(Game.board.fields[1]);
+            if ((Game.board.fields[2] != " ") && (Game.board.fields[2] === Game.board.fields[5]) && (Game.board.fields[2] === Game.board.fields[8])) return getWinner(Game.board.fields[2]);
 
             // 2 diagonal matches
-            if ((Game.board.fields[0] === Game.board.fields[4]) && (Game.board.fields[0] === Game.board.fields[8])) return getWinner(Game.board.fields[0]);
-            if ((Game.board.fields[2] === Game.board.fields[4]) && (Game.board.fields[2] === Game.board.fields[6])) return getWinner(Game.board.fields[2]);
+            if ((Game.board.fields[0] != " ") && (Game.board.fields[0] === Game.board.fields[4]) && (Game.board.fields[0] === Game.board.fields[8])) return getWinner(Game.board.fields[0]);
+            if ((Game.board.fields[2] != " ") && (Game.board.fields[2] === Game.board.fields[4]) && (Game.board.fields[2] === Game.board.fields[6])) return getWinner(Game.board.fields[2]);
 
             return winner;
         };
@@ -315,7 +329,6 @@ Game.setup();
 
 // FOR MANUAL TESTING
 function showDemo() {
-    Game.board.reset();
     Game.board.setFieldsToDemo();
     Game.board.Display.setMode("toConsole");
     Game.board.Display.draw();
@@ -325,3 +338,5 @@ function showDemo() {
 // LENI MEYER
 
 // ROBERT MEYER
+
+// DIETER
