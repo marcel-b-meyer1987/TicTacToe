@@ -69,8 +69,10 @@ const Game = (function() {
         board.Display.setMode = (mode) => {
             if (mode === "toGUI") {
                 board.Display.mode = "GUI";
+                console.log("Display Mode: GUI");
             } else {
-                board.Display.mode = "CONSOLE"
+                board.Display.mode = "CONSOLE";
+                console.log("Display Mode: Console");
             }
         };
 
@@ -246,14 +248,36 @@ const Game = (function() {
                     return (multi === "y") ? true : false;
 
                 default:
+                    const playerModeSelector = document.getElementById("player-mode-field");
+                    playerModeSelector.classList.remove("hidden");
+                    playerModeSelector.addEventListener("change", (e) => {
+                        if (e.target.value === "multi") {
+                            return true;
+                         } else {
+                            return false;
+                         } 
+                    });
+            };
+        };
+
+        const enterPlayerName = () => {
+            let name = "";
+            switch (board.Display.mode) {
+                case "CONSOLE":
+                    while (name == "") {
+                        name = prompt("Please enter your name.\n", "Player 1");
+                    }
+                    return name;
+
+                default:
                     // implementation for GUI mode should come here
                     // FOR NOW: SAME AS CONSOLE MODE!
-                    while (! (multi === "y" || multi === "n")) {
-                        multi = prompt("Please advise if you want to play in Multiplayer mode.\n (y/n)", "n");
+                    while (name == "") {
+                        name = prompt("Please enter your name.\n", "Player 1");
                     }
-                    return (multi === "y") ? true : false;
+                    return name;
             }
-        };
+        }
 
 
         // ++++++++++++++++ GENERAL SETUP & BOILER PLATE CODE ++++++++++++++++
@@ -293,9 +317,10 @@ const Game = (function() {
         const init = () => {
             //ask if 1 or 2 players? --- set isMultiplayer to true or false // TESTED OK
             Game.isMultiplayer = Game.setMultiplayer();
+            console.log(`Multiplayer mode: `, Game.isMultiplayer);
 
-            Game.players[0] = new Player("Player 1", "X", true);
-            Game.players[1] = new Player("Player 2", "O", this.isMultiplayer);
+            Game.players[0] = new Player(enterPlayerName() || "Player 1", "X", true);
+            Game.players[1] = new Player("Player 2", "O", Game.isMultiplayer);
             
             Game.board.reset();
             Game.board.Display.draw();
@@ -338,7 +363,6 @@ const Game = (function() {
         };
 
         const isOver = () => {      // TESTED OK
-
             // make sure the game board has been set up in the first place (= no field has value undefined)
             if (Game.board.fields[0] != undefined) {
                 // if game has a winner or ends in a tie (=the game is over), return true 
@@ -351,7 +375,6 @@ const Game = (function() {
         };
 
         const isTie = () => {       // TESTED OK
-            
             // make sure the game board has been set up in the first place (= no field has value undefined)
             if (Game.board.fields[0] != undefined) {
                 // if no more free fields AND if there is no winner, the game is a tie
@@ -360,18 +383,6 @@ const Game = (function() {
 
             // otherwise, return false as default, because the game cannot be a tie if it has not begun
             return false;
-
-            // let outcome = true; 
-
-            // // if there is at least one field which has neither the marker of player 1 or player 2 as value (=is still free), the game is no tie (yet)
-            // for (let i = 0; i < Game.board.fields.length; i++) {
-            //     if ((Game.board.fields[i] != Game.players[0].marker) && (Game.board.fields[i] != Game.players[1].marker)) {
-            //         outcome = false;
-            //         break;
-            //     }
-            // }
-
-            // return outcome;
         };
 
         const hasWinner = () => {       // TESTED OK
@@ -451,6 +462,14 @@ function testWin() {
     Game.board.Display.draw();
     console.log("Winner:", Game.hasWinner());
 }
+
+
+// ++++++++++++++++ UI HANDLING ++++++++++++++++
+
+// enable selection of display mode through UI
+const displayModeSelector = document.getElementById("display-mode");
+displayModeSelector.addEventListener("change", (e) => Game.board.Display.setMode(e.target.value));
+
 
 
 // LENI MEYER

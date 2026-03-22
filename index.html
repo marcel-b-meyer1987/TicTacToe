@@ -11,8 +11,48 @@
     <nav></nav>
     <main>
         <h1 class="accent">TicTacToe</h1>
-        <p>Welcome to the TicTacToe Browser Game.</p>
-        <p>For now, please open your browser consol to play the game.</p>
+        <p style="margin-bottom: 4ch">Welcome to the TicTacToe Browser Game.</p>
+        
+        <div>
+            <div class="form-inputfield">
+                <div>
+                    <p>Please choose if you want to play the consol or the GUI version of the game:</p>
+                </div>
+                <div id="display-mode-field" class="form-field">
+                    <!-- <label for="display-mode">Display Mode:</label> -->
+                    <select name="display-mode" id="display-mode">
+                        <option value="toConsole">Console</option>
+                        <option value="toGUI">GUI</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-inputfield hidden" id="player-mode-field">
+                <div>
+                    <p>Do you want to play in Single Player or Multiplayer mode?</p>
+                </div>
+                <div class="form-field">
+                    <!-- <label for="display-mode">Display Mode:</label> -->
+                    <select name="player-mode" id="player-mode">
+                        <option value="single">Single Player</option>
+                        <option value="multi">Multiplayer</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-inputfield hidden">
+                <div>
+                    <p>Please enter your name:</p>
+                </div>
+                <div class="form-field">
+                    <!-- <label for="name">Name:</label> -->
+                    <input class="input" type="text" name="name" id="name" autocomplete="off" placeholder="Player 1">
+                    <button class="save-button" id="save-name-button">Save</button>
+                </div>
+            </div>
+
+        </div>
+
         <section class="buttons">
             <button id="start-button">START</button>
         </section>
