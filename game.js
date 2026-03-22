@@ -241,7 +241,7 @@ const Game = (function() {
             switch (board.Display.mode) {
                 case "CONSOLE":
                     while (! (multi === "y" || multi === "n")) {
-                        multi = prompt("Please advise if you want to play in Multiplayer mode (y/n)", "n");
+                        multi = prompt("Please advise if you want to play in Multiplayer mode.\n (y/n)", "n");
                     }
                     return (multi === "y") ? true : false;
 
@@ -249,7 +249,7 @@ const Game = (function() {
                     // implementation for GUI mode should come here
                     // FOR NOW: SAME AS CONSOLE MODE!
                     while (! (multi === "y" || multi === "n")) {
-                        multi = prompt("Please advise if you want to play in Multiplayer mode (y/n)", "n");
+                        multi = prompt("Please advise if you want to play in Multiplayer mode.\n (y/n)", "n");
                     }
                     return (multi === "y") ? true : false;
             }
@@ -282,6 +282,7 @@ const Game = (function() {
             return false;
         };
 
+
         const setup = () => {
             const startBtn = document.getElementById("start-button");
             startBtn.addEventListener("click", (e) => {
@@ -293,16 +294,12 @@ const Game = (function() {
             //ask if 1 or 2 players? --- set isMultiplayer to true or false // TESTED OK
             Game.isMultiplayer = Game.setMultiplayer();
 
-            //create player objects // TESTED OK
-            let player1 = new Player("Player 1", "X", true);
-            let player2 = new Player("Player 2", "O", this.isMultiplayer);
-
-            Game.players = [player1, player2];
+            Game.players[0] = new Player("Player 1", "X", true);
+            Game.players[1] = new Player("Player 2", "O", this.isMultiplayer);
             
-            //reset game board
             Game.board.reset();
             Game.board.Display.draw();
-
+            
             Game.play();
         };       
 
