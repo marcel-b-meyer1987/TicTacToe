@@ -9,7 +9,7 @@ function Player(name, marker, isHuman) {
     player.isHuman = isHuman || false;
     player.score = 0;
 
-    player.chooseField = () => {        // MUST BE DEBUGGED
+    player.chooseField = () => {        
         let freeFields = Game.board.getFreeFields();
         let targetField;
         
@@ -18,13 +18,13 @@ function Player(name, marker, isHuman) {
                 // prompt human player to choose target field
                 targetField = parseInt(prompt("Please enter the number of the field in which to draw your mark (1-9).", ""));
             }
-            while (!freeFields.includes(targetField) || targetField < 1 || targetField > 9);
+            while (!freeFields.includes(targetField-1)) // || targetField < 1 || targetField > 9);
         } else {
             do {
                 // if not a human player, choose field randomly
                 targetField = Math.floor((Math.random() * 9));
             }
-            while (!freeFields.includes(targetField));
+            while (!freeFields.includes(targetField-1));
         }
 
         return targetField;
@@ -41,7 +41,9 @@ function Player(name, marker, isHuman) {
     };
 
     player.makeMove = () => {
-        player.drawMark(player.chooseField());
+        if(!Game.isOver()) {
+            player.drawMark(player.chooseField());
+        }
     };
 
     return player;
@@ -120,6 +122,32 @@ const Game = (function() {
             }
         };
 
+        board.Display.showGoodbye = () => {
+            switch (board.Display.mode) {
+                case "CONSOLE":        
+                    console.log("Thanks for playing! Have a nice day!");
+                    break;
+                case "GUI":
+                    alert("Thanks for playing! Have a nice day!");
+                    break;
+            }
+        };
+
+        board.Display.showScores = () => {
+            switch (board.Display.mode) {
+                case "CONSOLE":        
+                    console.log("SCORES:");
+                    console.log(`${Game.players[0].name}:`, Game.players[0].score);
+                    console.log(`${Game.players[1].name}:`, Game.players[1].score);
+                    break;
+                case "GUI":
+                    alert( `SCORES:\n\n
+                            ${Game.players[0].name}: ${Game.players[0].score} \n
+                            ${Game.players[0].name}: ${Game.players[0].score} \n`);
+                    break;
+            }
+        };
+
         board.Display.showTie = () => {
             switch (board.Display.mode) {
                 case "CONSOLE":
@@ -135,7 +163,7 @@ const Game = (function() {
             let winner = Game.hasWinner();
             switch (board.Display.mode) {
                 case "CONSOLE":
-                    console.log(`${winner} wins!`);
+                    console.log(`${winner.name} wins!`);
                     break;
                 case "GUI":
                     alert(`${winner} wins!`);
@@ -245,7 +273,7 @@ const Game = (function() {
                     // implementation for GUI mode should come here
                     // FOR NOW: SAME AS CONSOLE MODE!
                     while (! (again === "y" || again === "n")) {
-                        again = prompt("Do you want to play again?\n (y/n)", "n");
+                        again = prompt("Do you want to play again?\n (y/n)", "y");
                     }
                     return (again === "y") ? true : false;
             }
@@ -270,9 +298,7 @@ const Game = (function() {
             let player2 = new Player("Player 2", "O", this.isMultiplayer);
 
             Game.players = [player1, player2];
-            // Game.winner = null;
-
-
+            
             //reset game board
             Game.board.reset();
             Game.board.Display.draw();
@@ -282,6 +308,7 @@ const Game = (function() {
 
         const reset = () => {
             Game.board.reset();
+            Game.board.Display.draw();
             Game.play();
         };
 
@@ -291,7 +318,6 @@ const Game = (function() {
         const play = () => {
 
             // contains the game loop
-            //while (!Game.isOver()) { --- commented out for testing with hard coded infinite loop
             while (!Game.isOver()) {
                 Game.players[0].makeMove();
                 Game.players[1].makeMove();
@@ -299,33 +325,44 @@ const Game = (function() {
 
             if (Game.hasWinner() != null) {
                 Game.board.Display.showWinner();
-                Game.hasWinner.score++;
-                // Game.winner = null;
+                Game.hasWinner().score++;
             } else {
                 Game.board.Display.showTie();
             }
 
+            board.Display.showScores();
+
             if(playAgain()) {
-                Game.init();
+                Game.reset();
             } else {
+                board.Display.showGoodbye();
                 return;
             }
-
         };
 
         const isOver = () => {      // TESTED OK
-            // if game has a winner or ends in a tie (=the game is over), returns true 
-            if (Game.hasWinner()) return true;
-            if (Game.isTie()) return true;
 
+            // make sure the game board has been set up in the first place (= no field has value undefined)
+            if (Game.board.fields[0] != undefined) {
+                // if game has a winner or ends in a tie (=the game is over), return true 
+                if (Game.hasWinner()) return true;
+                if (Game.isTie()) return true;        
+            }
+            
             // in case the game is not over:
             return false;
         };
 
         const isTie = () => {       // TESTED OK
             
-            // if no more free fields AND if there is no winner, the game is a tie
-            return (Game.board.getFreeFields().length < 1) && (!Game.hasWinner());
+            // make sure the game board has been set up in the first place (= no field has value undefined)
+            if (Game.board.fields[0] != undefined) {
+                // if no more free fields AND if there is no winner, the game is a tie
+                return (Game.board.getFreeFields().length < 1) && (!Game.hasWinner());
+            }
+
+            // otherwise, return false as default, because the game cannot be a tie if it has not begun
+            return false;
 
             // let outcome = true; 
 
@@ -398,6 +435,12 @@ function showDemo() {
     Game.board.setFieldsToDemo();
     Game.board.Display.setMode("toConsole");
     Game.board.Display.draw();
+}
+
+function createDemoPlayers() {
+    let player1 = new Player("Player 1", "X", true);
+    let player2 = new Player("Player 2", "O", false);
+    Game.players = [player1, player2];
 }
 
 function testWin() {

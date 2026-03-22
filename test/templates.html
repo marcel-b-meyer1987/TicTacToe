@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Templates Development and Testing File</title>
+    <link rel="stylesheet" href="../styles/style.css">
+    <style>
+
+    * {
+        box-sizing: border-box;
+        padding: 0;
+        margin: 0;
+
+        --background-color: rgb(38, 40, 44);
+        --primary-color: rgb(226, 250, 222);
+        --secondary-color: rgb(172, 196, 243);
+        --accent-color: rgb(40, 200, 200);
+    }
+    
+    .popup-alert {
+        width: clamp(300px, 30vw, 350px);
+        height: clamp(150px, 15vh, 200px);
+        border: 1px solid var(--accent-color);
+        border-radius: 5px;
+        position: fixed;
+        top: calc(50vh);
+        left: calc(50vw);
+        transform: translate(-50%, -50%);
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+
+    }
+
+    .title-bar {
+        background-color: var(--accent-color);
+        color: var(--background-color);
+        border: 1px solid var(--accent-color);
+        border-radius: 5px 5px 0 0;
+        padding: 0 0 0 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .title {
+        flex-grow: 1;
+        font-size: larger;
+        font-weight: 600;
+    }
+
+    .x-button {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: var(--background-color);
+        color: var(--primary-color);
+        flex-grow: 0;
+        flex-shrink: 0;
+        padding: 0 10px;
+        cursor: pointer;
+        font-weight: 900;
+        height: 100%;
+        font-size: larger;
+    }
+
+    .x-button:hover {
+        color: var(--accent-color);
+    }
+
+    .msg-box {
+        padding: 5px 15px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        flex-grow: 1;
+    }
+
+    .msg {
+        width: 100%;
+        flex-grow: 1;
+    }
+
+    .msg-box button {
+        margin: 10px 5px;
+        padding: 4px 16px;
+        flex-grow: 0;
+        border-radius: 5px;
+        border: none;
+        font-size: 1.25rem;
+        font-weight: 900;
+        letter-spacing: 0.15ch;
+        cursor: pointer;
+    }
+    </style>
+
+</head>
+<body>
+
+<!--   TEMPLATE FOR POPUPALERT ELEMENT  -->
+
+    <dialog popover closedby="any" class="popup-alert">
+        <div class="title-bar">
+            <span class="title">${title}</span>
+            <span class="x-button">X</span>
+        </div>
+        <div class="msg-box">
+            <span class="msg">${msg}</span>
+            <div>
+                <button onclick="document.querySelector('.popup-alert').hide();">OK</button>
+            </div>
+        </div>
+    </dialog>
+
+</body>
+</html>
+
+
+
