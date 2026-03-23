@@ -27,9 +27,9 @@ main {
     height: 100%;
 }
 
-/* .hidden {
+.hidden {
     display: none;
-} */
+}
 
 .form-field {
     margin: 1ch 1ch 2ch 0;
@@ -96,6 +96,27 @@ main {
 
 .save-button:active {
     translate: 0 0.2rem;
+}
+
+#GUI-gameboard {
+    width: 35%;
+    aspect-ratio: 1;
+    border: 2px solid var(--primary-color);
+    display: grid;
+    grid-template-columns: auto auto auto;
+    grid-template-rows: auto auto auto;
+}
+
+#GUI-gameboard > div {
+    border: 2px solid var(--primary-color);
+    transition: all 100ms ease-in-out;
+}
+
+#GUI-gameboard > div:hover {
+    border: 2px solid var(--primary-color);
+    background-color: var(--secondary-color);
+    /* opacity: 0.5; */
+    cursor:grab;
 }
 
 h1 {

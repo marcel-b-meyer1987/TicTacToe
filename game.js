@@ -13,12 +13,27 @@ function Player(name, marker, isHuman) {
         let freeFields = Game.board.getFreeFields();
         let targetField;
         
+        
         if (player.isHuman) {
-            do {
-                // prompt human player to choose target field
-                targetField = parseInt(prompt("Please enter the number of the field in which to draw your mark (1-9).", ""));
+            switch(Game.board.Display.mode) {
+                case "CONSOLE":
+                    do {
+                        // prompt human player to choose target field
+                        targetField = parseInt(prompt("Please enter the number of the field in which to draw your mark (1-9).", ""));
+                    }
+                    while (!freeFields.includes(targetField-1)) // || targetField < 1 || targetField > 9);
+                    break;
+
+                default:
+                    // no GUI version implemented yet
+                    do {
+                        // prompt human player to choose target field
+                        targetField = parseInt(prompt("Please enter the number of the field in which to draw your mark (1-9).", ""));
+                    }
+                    while (!freeFields.includes(targetField-1)) // || targetField < 1 || targetField > 9);
+                    break;
             }
-            while (!freeFields.includes(targetField-1)) // || targetField < 1 || targetField > 9);
+            
         } else {
             do {
                 // if not a human player, choose field randomly
@@ -32,12 +47,17 @@ function Player(name, marker, isHuman) {
 
     player.drawMark = (field) => {
         let index = field-1;
-        // if ((Game.board.fields[index] != Game.players[0].marker) && (Game.board.fields[index] != Game.players[1].marker)) {
-        //     Game.board.fields[index] = player.marker;
-        //     Game.board.Display.draw();
-        // }
-        Game.board.fields[index] = player.marker;
-        Game.board.Display.draw();
+        switch(Game.board.Display.mode) {
+            case "CONSOLE":
+                Game.board.fields[index] = player.marker;
+                Game.board.Display.draw();
+                break;
+
+            default:
+                Game.board.fields[index] = player.marker;
+                Game.board.Display.draw();
+                break;
+        }
     };
 
     player.makeMove = () => {
@@ -69,9 +89,13 @@ const Game = (function() {
         board.Display.setMode = (mode) => {
             if (mode === "toGUI") {
                 board.Display.mode = "GUI";
+                Array.from(document.querySelectorAll(".GUI-only")).forEach((form) => form.classList.remove("hidden"));
+                board.Display.UI = document.getElementById("GUI-gameboard");
+                board.Display.UI.fields = Array.from(Game.board.Display.UI.children);                
                 console.log("Display Mode: GUI");
             } else {
                 board.Display.mode = "CONSOLE";
+                Array.from(document.querySelectorAll(".GUI-only")).forEach((form) => form.classList.add("hidden"));
                 console.log("Display Mode: Console");
             }
         };
@@ -116,11 +140,16 @@ const Game = (function() {
                     }
                     break;
 
-                case "GUI":
-                    console.warn("GUI drawing mode not implemented yet");
-                    board.Display.setMode("toConsole");
-                    board.Display.draw();
+                default:
+                    for (let i = 0; i < 9; i++) {
+                        Game.board.Display.UI.fields[i].innerText = Game.board.fields[i];
+                    }
                     break;
+
+                    // console.warn("GUI drawing mode not implemented yet");
+                    // board.Display.setMode("toConsole");
+                    // board.Display.draw();
+                    // break;
             }
         };
 
@@ -249,7 +278,6 @@ const Game = (function() {
 
                 default:
                     const playerModeSelector = document.getElementById("player-mode-field");
-                    playerModeSelector.classList.remove("hidden");
                     playerModeSelector.addEventListener("change", (e) => {
                         if (e.target.value === "multi") {
                             return true;
@@ -261,21 +289,16 @@ const Game = (function() {
         };
 
         const enterPlayerName = () => {
-            let name = "";
             switch (board.Display.mode) {
                 case "CONSOLE":
+                    let name = "";
                     while (name == "") {
                         name = prompt("Please enter your name.\n", "Player 1");
                     }
                     return name;
 
                 default:
-                    // implementation for GUI mode should come here
-                    // FOR NOW: SAME AS CONSOLE MODE!
-                    while (name == "") {
-                        name = prompt("Please enter your name.\n", "Player 1");
-                    }
-                    return name;
+                    return document.querySelector("input#name").value;
             }
         }
 
@@ -308,14 +331,17 @@ const Game = (function() {
 
 
         const setup = () => {
+            const GUIBoard = document.getElementById("GUI-gameboard");
             const startBtn = document.getElementById("start-button");
             startBtn.addEventListener("click", (e) => {
-                init();
+                Array.from(document.querySelectorAll(".GUI-only")).forEach((form) => form.classList.add("hidden"));
+                startBtn.classList.add("hidden");
+                GUIBoard.classList.remove("hidden");
+                setTimeout(init, 1000);
             });
         };
         
         const init = () => {
-            //ask if 1 or 2 players? --- set isMultiplayer to true or false // TESTED OK
             Game.isMultiplayer = Game.setMultiplayer();
             console.log(`Multiplayer mode: `, Game.isMultiplayer);
 
