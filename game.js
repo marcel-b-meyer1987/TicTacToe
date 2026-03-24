@@ -174,7 +174,7 @@ const Game = (function() {
                 case "GUI":
                     alert( `SCORES:\n\n
                             ${Game.players[0].name}: ${Game.players[0].score} \n
-                            ${Game.players[0].name}: ${Game.players[0].score} \n`);
+                            ${Game.players[1].name}: ${Game.players[1].score} \n`);
                     break;
             }
         };

@@ -99,24 +99,30 @@ main {
 }
 
 #GUI-gameboard {
-    width: 35%;
+    width: 20%;
     aspect-ratio: 1;
     border: 2px solid var(--primary-color);
     display: grid;
-    grid-template-columns: auto auto auto;
-    grid-template-rows: auto auto auto;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
 }
 
 #GUI-gameboard > div {
     border: 2px solid var(--primary-color);
     transition: all 100ms ease-in-out;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 4rem;
+	font-weight: 900;
 }
 
 #GUI-gameboard > div:hover {
     border: 2px solid var(--primary-color);
-    background-color: var(--secondary-color);
+    background-color: var(--primary-color);
+	color: var(--background-color);
     /* opacity: 0.5; */
-    cursor:grab;
+    cursor: pointer;
 }
 
 h1 {
