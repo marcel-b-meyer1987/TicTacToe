@@ -1,6 +1,6 @@
 
 // FACTORY FUNCTION FOR PLAYER OBJECTS
-function Player(name, marker, isHuman) {
+function Player(name, marker, isHuman, game) {
 
     const player = {};
 
@@ -10,13 +10,16 @@ function Player(name, marker, isHuman) {
     player.score = 0;
 
     player.chooseField = () => {        
-        let freeFields = Game.board.getFreeFields();
+        let freeFields = [];
         let targetField;
         
         
         if (player.isHuman) {
             switch(Game.board.Display.mode) {
+
                 case "CONSOLE":
+                    
+                    freeFields = Game.board.getFreeFields();
                     do {
                         // prompt human player to choose target field
                         targetField = parseInt(prompt("Please enter the number of the field in which to draw your mark (1-9).", ""));
@@ -25,13 +28,20 @@ function Player(name, marker, isHuman) {
                     break;
 
                 default:
-                    // no GUI version implemented yet
-                    do {
-                        // prompt human player to choose target field
-                        targetField = parseInt(prompt("Please enter the number of the field in which to draw your mark (1-9).", ""));
+                    
+                    freeFields = Game.board.getFreeFields_UI();
+
+                    // iterate over free fields in GUI and add event listeners to each
+                    Array.from(Game.board.Display.UI.fields).forEach(div => div.addEventListener("click", (e) => {
+                        targetField = parseInt(e.target.dataset["fieldNumber"]);
+                    }));
+                    
+                    if (!freeFields.includes(targetField-1)) {
+                        return targetField;
+                    } else {
+                        Game.showInfo("Please select a free field to draw your mark.");
                     }
-                    while (!freeFields.includes(targetField-1)) // || targetField < 1 || targetField > 9);
-                    break;
+                        
             }
             
         } else {
@@ -73,6 +83,18 @@ function Player(name, marker, isHuman) {
 
 // GENERATE GAME OBJECT
 const Game = (function() {
+
+    const info = document.getElementById("info");
+    const showInfo = (msg) => {
+        switch (Game.board.Display.mode) {
+            case "CONSOLE":
+                console.log(msg);
+                break;
+            default:
+                info.innerText = msg;
+                break;       
+        }
+    };
 
     // ++++++++++++++++ BOARD ++++++++++++++++
 
@@ -154,52 +176,23 @@ const Game = (function() {
         };
 
         board.Display.showGoodbye = () => {
-            switch (board.Display.mode) {
-                case "CONSOLE":        
-                    console.log("Thanks for playing! Have a nice day!");
-                    break;
-                case "GUI":
-                    alert("Thanks for playing! Have a nice day!");
-                    break;
-            }
+            Game.showInfo("Thanks for playing! Have a nice day!");
         };
 
         board.Display.showScores = () => {
-            switch (board.Display.mode) {
-                case "CONSOLE":        
-                    console.log("SCORES:");
-                    console.log(`${Game.players[0].name}:`, Game.players[0].score);
-                    console.log(`${Game.players[1].name}:`, Game.players[1].score);
-                    break;
-                case "GUI":
-                    alert( `SCORES:\n\n
-                            ${Game.players[0].name}: ${Game.players[0].score} \n
-                            ${Game.players[1].name}: ${Game.players[1].score} \n`);
-                    break;
-            }
+            Game.showInfo(
+                `SCORES:\n\n
+                ${Game.players[0].name}: ${Game.players[0].score} \n
+                ${Game.players[1].name}: ${Game.players[1].score} \n`);
         };
 
         board.Display.showTie = () => {
-            switch (board.Display.mode) {
-                case "CONSOLE":
-                    console.log(`The game result is a tie!`);
-                    break;
-                case "GUI":
-                    alert(`The game result is a tie!`);
-                    break;
-            }
+            Game.showInfo(`The game result is a tie!`);
         };
 
         board.Display.showWinner = () => {
             let winner = Game.hasWinner();
-            switch (board.Display.mode) {
-                case "CONSOLE":
-                    console.log(`${winner.name} wins!`);
-                    break;
-                case "GUI":
-                    alert(`${winner} wins!`);
-                    break;
-            }
+            Game.showInfo(`${winner.name} wins!`);
         };
 
         board.getFreeFields = () => {       // TESTED OK
@@ -216,6 +209,19 @@ const Game = (function() {
                     });
                     break;
             }
+            return freeFields;
+        }
+
+        board.getFreeFields_UI = () => {      
+            let freeFields = [];
+            let ffArr = Array.from(Game.board.Display.UI.fields);
+
+            ffArr.forEach((field, index) => {
+                if (field.innerText != "X" && field.innerText != "O") {
+                    freeFields.push(index);
+                }
+            });
+
             return freeFields;
         }
 
@@ -267,24 +273,22 @@ const Game = (function() {
         const setMultiplayer = () => {
             // ask if player wants Multiplayer and return true or false
             // for console mode
-            let multi = "";
 
             switch (board.Display.mode) {
                 case "CONSOLE":
+                    let multi = "";
                     while (! (multi === "y" || multi === "n")) {
                         multi = prompt("Please advise if you want to play in Multiplayer mode.\n (y/n)", "n");
                     }
                     return (multi === "y") ? true : false;
 
                 default:
-                    const playerModeSelector = document.getElementById("player-mode-field");
-                    playerModeSelector.addEventListener("change", (e) => {
-                        if (e.target.value === "multi") {
-                            return true;
-                         } else {
-                            return false;
-                         } 
-                    });
+                    const playerModeSelector = document.getElementById("player-mode");
+                    if (playerModeSelector.value === "multi") {
+                        return true;
+                    } else {
+                        return false;
+                    } 
             };
         };
 
@@ -298,7 +302,7 @@ const Game = (function() {
                     return name;
 
                 default:
-                    return document.querySelector("input#name").value;
+                    return document.querySelector("input#name").value || "Player 1";
             }
         }
 
@@ -334,6 +338,7 @@ const Game = (function() {
             const GUIBoard = document.getElementById("GUI-gameboard");
             const startBtn = document.getElementById("start-button");
             startBtn.addEventListener("click", (e) => {
+                displayModeSelector.classList.add("hidden");
                 Array.from(document.querySelectorAll(".GUI-only")).forEach((form) => form.classList.add("hidden"));
                 startBtn.classList.add("hidden");
                 GUIBoard.classList.remove("hidden");
@@ -345,8 +350,8 @@ const Game = (function() {
             Game.isMultiplayer = Game.setMultiplayer();
             console.log(`Multiplayer mode: `, Game.isMultiplayer);
 
-            Game.players[0] = new Player(enterPlayerName() || "Player 1", "X", true);
-            Game.players[1] = new Player("Player 2", "O", Game.isMultiplayer);
+            Game.players[0] = new Player(enterPlayerName() || "Player 1", "X", true, this);
+            Game.players[1] = new Player("Player 2", "O", Game.isMultiplayer, this);
             
             Game.board.reset();
             Game.board.Display.draw();
@@ -454,7 +459,7 @@ const Game = (function() {
             return Game.players.filter((player) => player.marker === markerInField)[0];
         };
 
-    return { board, players, isMultiplayer, setMultiplayer, setup, init, reset, play, isOver, isTie, hasWinner, getWinner };
+    return { board, players, isMultiplayer, setMultiplayer, setup, init, reset, play, isOver, isTie, hasWinner, getWinner, info, showInfo };
 
 }());
 
@@ -493,8 +498,10 @@ function testWin() {
 // ++++++++++++++++ UI HANDLING ++++++++++++++++
 
 // enable selection of display mode through UI
-const displayModeSelector = document.getElementById("display-mode");
+const displayModeSelector = document.getElementById("display-mode-field");
 displayModeSelector.addEventListener("change", (e) => Game.board.Display.setMode(e.target.value));
+
+
 
 
 

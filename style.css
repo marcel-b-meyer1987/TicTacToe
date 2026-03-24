@@ -125,6 +125,10 @@ main {
     cursor: pointer;
 }
 
+#infobox {
+    text-align: center;
+}
+
 h1 {
     margin-bottom: 2rem;
 }

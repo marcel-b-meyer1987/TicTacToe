@@ -14,11 +14,11 @@
         <p style="margin-bottom: 4ch">Welcome to the TicTacToe Browser Game.</p>
         
         <div>
-            <div class="form-inputfield">
+            <div class="form-inputfield" id="display-mode-field">
                 <div>
                     <p>Please choose if you want to play the consol or the GUI version of the game:</p>
                 </div>
-                <div id="display-mode-field" class="form-field">
+                <div class="form-field">
                     <!-- <label for="display-mode">Display Mode:</label> -->
                     <select name="display-mode" id="display-mode">
                         <option value="toConsole">Console</option>
@@ -58,7 +58,7 @@
         </section>
 
         <div id="GUI-gameboard" class="hidden GUI-only">
-            <div data-field-number="1" data-listener="none">X</div>
+            <div data-field-number="1" data-listener="none"></div>
             <div data-field-number="2" data-listener="none">&nbsp;</div>
             <div data-field-number="3" data-listener="none">&nbsp;</div>
             <div data-field-number="4" data-listener="none">O</div>
@@ -68,7 +68,10 @@
             <div data-field-number="8" data-listener="none">X</div>
             <div data-field-number="9" data-listener="none">&nbsp;</div>
         </div>
-        
+        <div id="infobox">
+            <p style="margin-top: 4ch">Info:</p>
+            <p id="info">Please make your next move.</p>
+        </div>
     </main>
     <footer>
         <div class="secondary">Developed by Marcel Meyer in January 2026 for the curriculum of The Odin Project.</div>
