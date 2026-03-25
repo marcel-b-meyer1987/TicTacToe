@@ -7,6 +7,7 @@ function Player(name, marker, isHuman, game) {
     player.name = name || "Player1";
     player.marker = marker || "X";
     player.isHuman = isHuman || false;
+    player.activeTurn = false;
     player.score = 0;
 
     player.chooseField = () => {        
@@ -29,27 +30,32 @@ function Player(name, marker, isHuman, game) {
 
                 default:
                     
+                    // get free fields on the UI board
                     freeFields = Game.board.getFreeFields_UI();
 
-                    // iterate over free fields in GUI and add event listeners to each
-                    Array.from(Game.board.Display.UI.fields).forEach(div => div.addEventListener("click", (e) => {
-                        targetField = parseInt(e.target.dataset["fieldNumber"]);
-                    }));
-                    
-                    if (!freeFields.includes(targetField-1)) {
-                        return targetField;
-                    } else {
-                        Game.showInfo("Please select a free field to draw your mark.");
-                    }
+                    // add click event listeners to all the free fields
+                    freeFields.forEach(field => field.addEventListener("click", function choose(e) {
                         
+                        // save the number of the e.target field in targetField
+                        targetField = e.target.dataset["fieldNumber"];
+
+                        // remove the event listeners
+                        freeFields.forEach(field => field.removeEventListener("click", choose));
+
+                        // return targetField
+                        return targetField;
+                    }));                        
             }
             
         } else {
+            // get free fields on the UI board
+            freeFields = Game.board.getFreeFields_UI();
+
             do {
                 // if not a human player, choose field randomly
                 targetField = Math.floor((Math.random() * 9));
             }
-            while (!freeFields.includes(targetField-1));
+            while (!freeFields.map(field => field.dataset["fieldNumber"]).includes(targetField-1));
         }
 
         return targetField;
@@ -72,8 +78,11 @@ function Player(name, marker, isHuman, game) {
 
     player.makeMove = () => {
         if(!Game.isOver()) {
+            player.activeTurn = true;
             player.drawMark(player.chooseField());
+            player.activeTurn = false;
         }
+        
     };
 
     return player;
@@ -212,17 +221,9 @@ const Game = (function() {
             return freeFields;
         }
 
-        board.getFreeFields_UI = () => {      
-            let freeFields = [];
-            let ffArr = Array.from(Game.board.Display.UI.fields);
-
-            ffArr.forEach((field, index) => {
-                if (field.innerText != "X" && field.innerText != "O") {
-                    freeFields.push(index);
-                }
-            });
-
-            return freeFields;
+        board.getFreeFields_UI = () => {        // TESTED OK
+            let uiFields = Array.from(document.getElementById("GUI-gameboard").children);
+            return uiFields.filter(field => field.innerHTML != "X" && field.innerHTML != "O");
         }
 
         board.reset = () => {
@@ -500,7 +501,6 @@ function testWin() {
 // enable selection of display mode through UI
 const displayModeSelector = document.getElementById("display-mode-field");
 displayModeSelector.addEventListener("change", (e) => Game.board.Display.setMode(e.target.value));
-
 
 
 
