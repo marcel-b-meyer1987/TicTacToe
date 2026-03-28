@@ -61,7 +61,7 @@ function Player(name, marker, isHuman) {
                         // if not a human player, choose field randomly
                         targetField = Math.floor((Math.random() * 9));
                     }
-                    while (!freeFields.map(field => parseInt(field.dataset["fieldNumber"])).includes(targetField-1));
+                    while (!freeFields.map(field => parseInt(field.dataset["fieldNumber"])).includes(targetField));
                     break;
             }
         }
@@ -220,7 +220,7 @@ const Game = (function() {
                     break;
                 case "blanks":
                     board.fields.forEach((value, index) => { 
-                        if((value === " ") || (value === NaN)) freeFields.push(index);
+                        if(value === " ") freeFields.push(index);
                     });
                     break;
             }
