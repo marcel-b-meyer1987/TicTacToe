@@ -3,6 +3,8 @@
 
 // LENI MEYER
 
+// ROBERT MEYER 
+
 // FACTORY FUNCTION FOR PLAYER OBJECTS
 function Player(name, marker, isHuman) {
 
@@ -45,14 +47,23 @@ function Player(name, marker, isHuman) {
             }
             
         } else {
-            // get free fields on the UI board
-            freeFields = Game.board.getFreeFields_UI();
+            switch(Game.board.Display.mode) {
+                case "CONSOLE":
+                    freeFields = Game.board.getFreeFields();
 
-            do {
-                // if not a human player, choose field randomly
-                targetField = Math.floor((Math.random() * 9));
+                    
+                    break;
+
+                default:    // GUI mode
+                    freeFields = Game.board.getFreeFields_UI();
+                            
+                    do {
+                        // if not a human player, choose field randomly
+                        targetField = Math.floor((Math.random() * 9));
+                    }
+                    while (!freeFields.map(field => parseInt(field.dataset["fieldNumber"])).includes(targetField-1));
+                    break;
             }
-            while (!freeFields.map(field => field.dataset["fieldNumber"]).includes(targetField-1));
         }
 
         return targetField;
@@ -412,26 +423,41 @@ const Game = (function() {
             }
         };
 
-        const isOver = () => {      // TESTED OK
-            // make sure the game board has been set up in the first place (= no field has value undefined)
-            if (Game.board.fields[0] != undefined) {
-                // if game has a winner or ends in a tie (=the game is over), return true 
-                if (Game.hasWinner()) return true;
-                if (Game.isTie()) return true;        
-            }
-            
-            // in case the game is not over:
+        const isOver = () => {      //
+            if (Game.isTie()) return true;
+            if (Game.hasWinner()) return true;
+
+            // in case the game is not over = default:
             return false;
         };
 
-        const isTie = () => {       // TESTED OK
-            // make sure the game board has been set up in the first place (= no field has value undefined)
-            if (Game.board.fields[0] != undefined) {
-                // if no more free fields AND if there is no winner, the game is a tie
-                return (Game.board.getFreeFields().length < 1) && (!Game.hasWinner());
-            }
+        const isTie = () => {       //
 
-            // otherwise, return false as default, because the game cannot be a tie if it has not begun
+            switch(Game.board.Display.mode) {
+                case "CONSOLE":
+                    if(Game.board.getFreeFields().length < 1) {
+                        if(!Game.hasWinner()){
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                    break;
+
+                default:    // display mode = "GUI"
+                    if(Game.board.getFreeFields_UI().length < 1) {
+                        if(!Game.hasWinner()){
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                    break;
+            }
+            // if no more free fields AND if there is no winner, the game is a tie
+            
+            
+            // return false as default
             return false;
         };
 
@@ -464,10 +490,10 @@ const Game = (function() {
             }
 
             // check for 2 diagonal matches
-            if ((Game.board.fields[0] != " ") && (Game.board.fields[0] === Game.board.fields[4]) && (Game.board.fields[0] === Game.board.fields[8])) {
+            if ((Game.board.fields[0] != " ") && (Game.board.fields[0] === Game.board.fields[4]) && (Game.board.fields[4] === Game.board.fields[8])) {
                 return Game.getWinner(Game.board.fields[0]);
             }
-            if ((Game.board.fields[2] != " ") && (Game.board.fields[2] === Game.board.fields[4]) && (Game.board.fields[2] === Game.board.fields[6])) {
+            if ((Game.board.fields[2] != " ") && (Game.board.fields[2] === Game.board.fields[4]) && (Game.board.fields[4] === Game.board.fields[6])) {
                 return Game.getWinner(Game.board.fields[2]);
             } 
 
