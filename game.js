@@ -1,6 +1,10 @@
 
+// DIETER
+
+// LENI MEYER
+
 // FACTORY FUNCTION FOR PLAYER OBJECTS
-function Player(name, marker, isHuman, game) {
+function Player(name, marker, isHuman) {
 
     const player = {};
 
@@ -10,10 +14,9 @@ function Player(name, marker, isHuman, game) {
     player.activeTurn = false;
     player.score = 0;
 
-    player.chooseField = () => {        
+    player.chooseField = async () => {        
         let freeFields = [];
         let targetField;
-        
         
         if (player.isHuman) {
             switch(Game.board.Display.mode) {
@@ -33,18 +36,12 @@ function Player(name, marker, isHuman, game) {
                     // get free fields on the UI board
                     freeFields = Game.board.getFreeFields_UI();
 
-                    // add click event listeners to all the free fields
-                    freeFields.forEach(field => field.addEventListener("click", function choose(e) {
+                    // save promise in targetField
+                    targetField = await player.clickField(freeFields);
                         
-                        // save the number of the e.target field in targetField
-                        targetField = e.target.dataset["fieldNumber"];
-
-                        // remove the event listeners
-                        freeFields.forEach(field => field.removeEventListener("click", choose));
-
-                        // return targetField
-                        return targetField;
-                    }));                        
+                    // remove the event listeners
+                    //freeFields.forEach(field => field.removeEventListener("click"));
+                    break;
             }
             
         } else {
@@ -61,30 +58,31 @@ function Player(name, marker, isHuman, game) {
         return targetField;
     };
 
+    player.clickField = (freeFields) => {       // TESTED OK
+        return new Promise (resolve => {
+            // add click event listeners to all the free fields which resolve with corresponding field number
+            freeFields.forEach(field => field.addEventListener("click", e => {
+                resolve(parseInt(e.target.dataset["fieldNumber"]));
+            }));
+        });
+    }
+
     player.drawMark = (field) => {
         let index = field-1;
-        switch(Game.board.Display.mode) {
-            case "CONSOLE":
-                Game.board.fields[index] = player.marker;
-                Game.board.Display.draw();
-                break;
-
-            default:
-                Game.board.fields[index] = player.marker;
-                Game.board.Display.draw();
-                break;
-        }
+        Game.board.fields[index] = player.marker;
+        Game.board.Display.draw();
     };
 
-    player.makeMove = () => {
+    player.makeMove = async () => {
         if(!Game.isOver()) {
-            player.activeTurn = true;
-            player.drawMark(player.chooseField());
-            player.activeTurn = false;
+            // player.activeTurn = true;
+            let targetField = await player.chooseField();
+            player.drawMark(targetField);
+            // player.activeTurn = false;
         }
-        
     };
 
+    // return Player object
     return player;
 };
 
@@ -115,14 +113,16 @@ const Game = (function() {
 
         board.Display.spacer = "blanks";
 
-        board.Display.mode = "CONSOLE";
+        board.Display.mode = "GUI";
+
+        board.Display.UI = document.getElementById("GUI-gameboard");
+        board.Display.UI.fields = Array.from(board.Display.UI.children);
 
         board.Display.setMode = (mode) => {
-            if (mode === "toGUI") {
+            if (mode === "GUI") {
                 board.Display.mode = "GUI";
                 Array.from(document.querySelectorAll(".GUI-only")).forEach((form) => form.classList.remove("hidden"));
-                board.Display.UI = document.getElementById("GUI-gameboard");
-                board.Display.UI.fields = Array.from(Game.board.Display.UI.children);                
+                                
                 console.log("Display Mode: GUI");
             } else {
                 board.Display.mode = "CONSOLE";
@@ -172,15 +172,10 @@ const Game = (function() {
                     break;
 
                 default:
-                    for (let i = 0; i < 9; i++) {
-                        Game.board.Display.UI.fields[i].innerText = Game.board.fields[i];
+                    for (let i = 0; i < 9; i++) {   
+                        Game.board.Display.UI.fields[i].innerText = Game.board.fields[i] || "";
                     }
                     break;
-
-                    // console.warn("GUI drawing mode not implemented yet");
-                    // board.Display.setMode("toConsole");
-                    // board.Display.draw();
-                    // break;
             }
         };
 
@@ -227,25 +222,39 @@ const Game = (function() {
         }
 
         board.reset = () => {
-            switch (board.Display.spacer) {
-                case "numbers":
-                    for (let i = 0; i < 9; i++) {
-                        board.fields[i] = `${i+1}`;
+            switch (Game.board.Display.mode) {
+
+                // CONSOLE MODE
+                case "CONSOLE":
+                    switch (board.Display.spacer) {
+                        case "numbers":
+                            for (let i = 0; i < 9; i++) {
+                                board.fields[i] = `${i+1}`;
+                            }
+                            break;
+
+                        case "blanks":
+                            for (let i = 0; i < 9; i++) {
+                                board.fields[i] = " ";
+                            }
+                            break;
+
+                        default:
+                            for (let i = 0; i < 9; i++) {
+                                board.fields[i] = " ";
+                            }
+                            break;
                     }
                     break;
 
-                case "blanks":
-                    for (let i = 0; i < 9; i++) {
-                        board.fields[i] = " ";
-                    }
-                    break;
+                // GUI MODE
                 default:
                     for (let i = 0; i < 9; i++) {
-                        board.fields[i] = " ";
+                        board.fields[i] = undefined;
                     }
                     break;
-            }          
-        };
+            }
+        }
 
 
         board.setFieldsToDemo = () => {
@@ -284,16 +293,25 @@ const Game = (function() {
                     return (multi === "y") ? true : false;
 
                 default:
-                    const playerModeSelector = document.getElementById("player-mode");
+                    const multiplayerUI = document.querySelectorAll(".multiplayer-only");
+
                     if (playerModeSelector.value === "multi") {
+                        // display all input elements in UI which are only needed for multiplayer mode 
+                        multiplayerUI.forEach(elem => elem.classList.remove("hidden"));
+
+                        // return boolean to caller
                         return true;
                     } else {
+                        // hide all input elements in UI which are only needed for multiplayer mode
+                        multiplayerUI.forEach(elem => elem.classList.add("hidden"));
+
+                        // return boolean to caller
                         return false;
                     } 
             };
         };
 
-        const enterPlayerName = () => {
+        const enterPlayerName = (index) => {
             switch (board.Display.mode) {
                 case "CONSOLE":
                     let name = "";
@@ -303,7 +321,7 @@ const Game = (function() {
                     return name;
 
                 default:
-                    return document.querySelector("input#name").value || "Player 1";
+                    return document.querySelector(`input#player${index}_name`).value || `Player ${index}`;
             }
         }
 
@@ -351,8 +369,8 @@ const Game = (function() {
             Game.isMultiplayer = Game.setMultiplayer();
             console.log(`Multiplayer mode: `, Game.isMultiplayer);
 
-            Game.players[0] = new Player(enterPlayerName() || "Player 1", "X", true, this);
-            Game.players[1] = new Player("Player 2", "O", Game.isMultiplayer, this);
+            Game.players[0] = new Player(enterPlayerName(1) || "Player 1", "X", true, this);
+            Game.players[1] = new Player(Game.isMultiplayer ? enterPlayerName(2) : "Player 2", "O", Game.isMultiplayer, this);
             
             Game.board.reset();
             Game.board.Display.draw();
@@ -369,12 +387,12 @@ const Game = (function() {
 
         // ++++++++++++++++ GAME CONTROL FLOW LOGIC ++++++++++++++++
 
-        const play = () => {
+        const play = async () => {
 
             // contains the game loop
             while (!Game.isOver()) {
-                Game.players[0].makeMove();
-                Game.players[1].makeMove();
+                await Game.players[0].makeMove();
+                await Game.players[1].makeMove();
             };
 
             if (Game.hasWinner() != null) {
@@ -501,6 +519,10 @@ function testWin() {
 // enable selection of display mode through UI
 const displayModeSelector = document.getElementById("display-mode-field");
 displayModeSelector.addEventListener("change", (e) => Game.board.Display.setMode(e.target.value));
+
+// enable selection of single- or multiplayer mode through UI
+const playerModeSelector = document.getElementById("player-mode");
+playerModeSelector.addEventListener("change", e => Game.setMultiplayer());
 
 
 

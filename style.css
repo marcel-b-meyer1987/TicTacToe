@@ -35,6 +35,7 @@ main {
     margin: 1ch 1ch 2ch 0;
     display: flex;
     justify-content: flex-start;
+    gap: 2ch;
 }
 
 .form-field label {
